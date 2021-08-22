@@ -207,4 +207,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/radioGroupStatus" />
 
+    <Button
+        android:id="@+id/button_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonAddProject"
+        android:layout_marginTop="12dp"
+        android:layout_toRightOf="@+id/buttonAddProject"
+        android:onClick="savebtn"
+        android:text="save"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonAddProject" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
