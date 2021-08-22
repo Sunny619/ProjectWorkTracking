@@ -4,12 +4,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+
+import com.google.gson.Gson;
 
 public class AddNewProjectActivity extends AppCompatActivity {
 
@@ -53,5 +56,14 @@ public class AddNewProjectActivity extends AppCompatActivity {
         //System.out.println(project.toString());
         MainActivity.Projects.add(project);
         System.out.println(MainActivity.Projects.toString());
+        saveData();
+    }
+    private void saveData(){
+        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(MainActivity.Projects);
+        editor.putString("ProjectsList", json);
+        editor.apply();
     }
 }
