@@ -2,4 +2,10 @@
     <string name="app_name">Project Work Tracking</string>
     <string name="projectName">Project Name</string>
     <string name="ButtonCreate">Create</string>
+    <string-array name="Priority">
+        <item>Select Priority</item>
+        <item>High</item>
+        <item>Medium</item>
+        <item>Low</item>
+    </string-array>
 </resources>
