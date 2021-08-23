@@ -2,7 +2,6 @@ package com.example.ProjectWorkTracking;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -55,7 +54,7 @@ public class AddNewProjectActivity extends AppCompatActivity {
                 endDate.getText().toString(), manager.getText().toString(),Integer.parseInt(budget.getText().toString()),
                 priority1, teams, status1);
         //System.out.println(project.toString());
-        Boolean duplicate = false;
+        boolean duplicate = false;
         for(int i =0; i<MainActivity.Projects.size();i++)
         {
             if(MainActivity.Projects.get(i).name.equals(name.getText().toString()) )

@@ -9,8 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.RelativeLayout;
+
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -19,7 +18,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String EXTRA_MESSAGE = "com.example.ProjectWorkTracking.MESSAGE";
     public static ArrayList<Project> Projects;
     public RecyclerView projectsRecView;
     public static Context contextOfApplication;

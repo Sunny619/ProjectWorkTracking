@@ -1,11 +1,11 @@
 package com.example.ProjectWorkTracking;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -47,6 +47,14 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
                 saveData();
             }
         });
+        holder.details.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.getContextOfApplication(), ProjectDetailsActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);;
+                intent.putExtra("index",position);
+                MainActivity.getContextOfApplication().startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -68,6 +76,7 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
         private TextView description3;
         private ImageView image;
         private com.google.android.material.button.MaterialButton delete;
+        private com.google.android.material.button.MaterialButton details;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             card = itemView.findViewById(R.id.card);
@@ -77,6 +86,7 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
             description3 = itemView.findViewById(R.id.description3);
             image = itemView.findViewById(R.id.image);
             delete = itemView.findViewById(R.id.delete);
+            details = itemView.findViewById(R.id.detailsButton);
         }
     }
     public void  saveData(){
