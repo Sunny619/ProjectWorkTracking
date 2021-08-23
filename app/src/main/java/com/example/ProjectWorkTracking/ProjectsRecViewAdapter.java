@@ -1,13 +1,18 @@
 package com.example.ProjectWorkTracking;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -34,6 +39,14 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
         holder.description3.setText("Active: " + projects.get(position).status +  "       Due Date: "
                 + projects.get(position).endDate);
         holder.image.setImageResource(R.drawable.imagepro);
+        holder.delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity.Projects.remove(position);
+                ((ViewGroup) holder.card.getParent()).removeView(holder.card);
+                saveData();
+            }
+        });
     }
 
     @Override
@@ -54,6 +67,7 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
         private TextView description2;
         private TextView description3;
         private ImageView image;
+        private com.google.android.material.button.MaterialButton delete;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             card = itemView.findViewById(R.id.card);
@@ -62,6 +76,17 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
             description2 = itemView.findViewById(R.id.description2);
             description3 = itemView.findViewById(R.id.description3);
             image = itemView.findViewById(R.id.image);
+            delete = itemView.findViewById(R.id.delete);
         }
     }
+    public void  saveData(){
+        Context applicationContext = MainActivity.getContextOfApplication();
+        SharedPreferences sharedPreferences = applicationContext.getSharedPreferences("shared preferences", 0);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(MainActivity.Projects);
+        editor.putString("ProjectsList", json);
+        editor.apply();
+    }
+
 }

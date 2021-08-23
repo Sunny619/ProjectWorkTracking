@@ -11,6 +11,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -54,11 +55,32 @@ public class AddNewProjectActivity extends AppCompatActivity {
                 endDate.getText().toString(), manager.getText().toString(),Integer.parseInt(budget.getText().toString()),
                 priority1, teams, status1);
         //System.out.println(project.toString());
-        MainActivity.Projects.add(project);
-        System.out.println(MainActivity.Projects.toString());
-        saveData();
+        Boolean duplicate = false;
+        for(int i =0; i<MainActivity.Projects.size();i++)
+        {
+            if(MainActivity.Projects.get(i).name.equals(name.getText().toString()) )
+            {
+                duplicate =true;
+                break;
+            }
+
+        }
+        if(duplicate)
+        {
+            Toast.makeText(this, "This Project name already exists!", Toast.LENGTH_SHORT).show();
+            System.out.println("Duplicate");
+        }
+        else
+        {
+            MainActivity.Projects.add(project);
+            //System.out.println(MainActivity.Projects.toString());
+            saveData();
+            Toast.makeText(this, "Project added Successfully!", Toast.LENGTH_SHORT).show();
+            System.out.println("Created");
+        }
+
     }
-    private void saveData(){
+    public void  saveData(){
         SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Gson gson = new Gson();

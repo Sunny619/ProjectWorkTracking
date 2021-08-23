@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -18,14 +19,16 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    public static final String EXTRA_MESSAGE = "com.example.ProjectWorkTracking.MESSAGE";
+    private static final String EXTRA_MESSAGE = "com.example.ProjectWorkTracking.MESSAGE";
     public static ArrayList<Project> Projects;
     public RecyclerView projectsRecView;
+    public static Context contextOfApplication;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        contextOfApplication = getApplicationContext();
         loadData();
 //        Boolean[] a = new Boolean[3];
 //        a[0] = true;
@@ -54,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
         if (Projects == null) {
             Projects = new ArrayList<>();
         }
+    }
+    public static Context getContextOfApplication(){
+        return contextOfApplication;
     }
     //TODO: create functionality for Add new Project button
 }

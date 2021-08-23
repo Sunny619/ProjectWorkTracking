@@ -82,11 +82,12 @@
                     android:text="View Details" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/delete"
                     style="?attr/borderlessButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="action_2"
-                    tools:visibility="invisible" />
+                    android:text="Delete"
+                    tools:visibility="visible" />
             </LinearLayout>
 
         </LinearLayout>
