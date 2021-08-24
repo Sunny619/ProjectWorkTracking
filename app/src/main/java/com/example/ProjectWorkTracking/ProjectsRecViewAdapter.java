@@ -42,8 +42,9 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
         holder.delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity.Projects.remove(position);
-                ((ViewGroup) holder.card.getParent()).removeView(holder.card);
+                projects.remove(position);
+                notifyItemRemoved(position);
+                notifyItemRangeChanged(position,getItemCount());
                 saveData();
             }
         });
