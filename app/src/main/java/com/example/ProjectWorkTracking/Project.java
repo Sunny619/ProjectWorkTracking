@@ -8,8 +8,9 @@ public class Project {
     int priority;
     Boolean[] teams;
     Boolean status;
+    int[] progress;
 
-    public Project(String name, String description, String startDate, String endDate, String manager, int budget, int priority, Boolean[] teams, Boolean status) {
+    public Project(String name, String description, String startDate, String endDate, String manager, int budget, int priority, Boolean[] teams, Boolean status, int[] progress) {
         this.name = name;
         this.description = description;
         this.startDate = startDate;
@@ -19,6 +20,7 @@ public class Project {
         this.priority = priority;
         this.teams = teams;
         this.status = status;
+        this.progress = progress;
     }
 
     @Override
@@ -33,6 +35,7 @@ public class Project {
                 ", priority=" + priority +
                 ", teams=" + Arrays.toString(teams) +
                 ", status=" + status +
+                ", progress=" + Arrays.toString(progress) +
                 '}';
     }
 }

@@ -20,23 +20,14 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     public static ArrayList<Project> Projects;
     public RecyclerView projectsRecView;
-    public static Context contextOfApplication;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        contextOfApplication = getApplicationContext();
         loadData();
-//        Boolean[] a = new Boolean[3];
-//        a[0] = true;
-//        a[1] = true;
-//        a[2] = true;
-//        Projects.add(new Project("2","2","2","2","2", 2,3, a, false ));
-//        Projects.add(new Project("2","2","2","2","2", 2,3, a, false ));
-//        Projects.add(new Project("2","2","2","2","2", 2,3, a, false ));
         projectsRecView = findViewById(R.id.Recycle);
-        ProjectsRecViewAdapter adapter = new ProjectsRecViewAdapter();
+        ProjectsRecViewAdapter adapter = new ProjectsRecViewAdapter(this);
         adapter.setProjects(Projects);
         projectsRecView.setAdapter(adapter);
         projectsRecView.setLayoutManager(new LinearLayoutManager(this));
@@ -55,9 +46,6 @@ public class MainActivity extends AppCompatActivity {
         if (Projects == null) {
             Projects = new ArrayList<>();
         }
-    }
-    public static Context getContextOfApplication(){
-        return contextOfApplication;
     }
     //TODO: create functionality for Add new Project button
 }

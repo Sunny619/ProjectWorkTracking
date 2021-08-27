@@ -52,7 +52,7 @@ public class AddNewProjectActivity extends AppCompatActivity {
             priority1=0;
         Project project = new Project(name.getText().toString(), description.getText().toString(), startDate.getText().toString(),
                 endDate.getText().toString(), manager.getText().toString(),Integer.parseInt(budget.getText().toString()),
-                priority1, teams, status1);
+                priority1, teams, status1, new int[]{0,0,0});
         //System.out.println(project.toString());
         boolean duplicate = false;
         for(int i =0; i<MainActivity.Projects.size();i++)
