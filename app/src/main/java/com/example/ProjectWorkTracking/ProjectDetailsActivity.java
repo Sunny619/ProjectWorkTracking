@@ -7,32 +7,60 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
 
+import java.util.Arrays;
+
 public class ProjectDetailsActivity extends AppCompatActivity {
     int index;
+    String[] priorityStrings = new String[]{"LOW","MEDIUM","HIGH"};
+    int[] priorityColors;
     com.google.android.material.progressindicator.CircularProgressIndicator[] progressBar;
+    Button priorityButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        priorityColors = new int[]{getResources().getColor(R.color.low_priority),getResources().getColor(R.color.medium_priority),getResources().getColor(R.color.high_priority)};
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_project_details);
         Intent intent = getIntent();
         index = intent.getIntExtra("index", 0);
-        TextView t = findViewById(R.id.textViewAllDetails);
-        t.setText(MainActivity.Projects.get(index).name);
+        TextView title = findViewById(R.id.textViewTitle);
+        TextView description = findViewById(R.id.textViewDescription);
+        title.setText(MainActivity.Projects.get(index).name);
+        description.setText(MainActivity.Projects.get(index).description);
+        //System.out.println(priorityButtons[0][1]);
         progressBar = new com.google.android.material.progressindicator.CircularProgressIndicator[3];
         progressBar[0]= findViewById(R.id.progressBar1);
         progressBar[1]= findViewById(R.id.progressBar2);
         progressBar[2]= findViewById(R.id.progressBar3);
-
+        priorityButton = findViewById(R.id.buttonPriority);
+        setPriority(MainActivity.Projects.get(index).priority-1);
         //progressBar.setProgress(70);
         //ObjectAnimator.ofInt(progressBar, "progress", 79).start();
         for(int i = 0;i<3;i++)
         {
                setProgressAnimate(progressBar[i],MainActivity.Projects.get(index).progress[i]);
         }
+    }
+    public void priorityButtonClickFunc(View view)
+    {
+        int priority = Integer.parseInt((String)view.getTag());
+        if(priority == 2)
+            priority = 0;
+        else
+            priority++;
+        setPriority(priority);
+        MainActivity.Projects.get(index).priority = priority+1;
+        saveData();
+    }
+    public void setPriority(int priority)
+    {
+        priorityButton.setBackgroundColor(priorityColors[priority]);
+        priorityButton.setText(priorityStrings[priority]);
+        priorityButton.setTag(Integer.toString(priority));
     }
     public void incrementProgress(View v)
     {
