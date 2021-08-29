@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class Project {
     String name, description, startDate, endDate, manager;
-    int budget;
+    int budget,budgetUsed;
     int priority;
     Boolean[] teams;
     Boolean status;
@@ -21,6 +21,7 @@ public class Project {
         this.teams = teams;
         this.status = status;
         this.progress = progress;
+        this.budgetUsed = 0;
     }
 
     @Override

@@ -7,8 +7,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -23,7 +25,9 @@ public class ProjectDetailsActivity extends AppCompatActivity {
     com.google.android.material.progressindicator.CircularProgressIndicator[] progressBar;
     Button priorityButton;
     Switch status;
-    TextView statusText;
+    TextView statusText, maxBudget, usedBudget, maxBudget2;
+    SeekBar budget;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         priorityColors = new int[]{getResources().getColor(R.color.low_priority),getResources().getColor(R.color.medium_priority),getResources().getColor(R.color.high_priority)};
@@ -43,12 +47,18 @@ public class ProjectDetailsActivity extends AppCompatActivity {
         priorityButton = findViewById(R.id.buttonPriority);
         status = findViewById(R.id.switchStatus);
         statusText = findViewById(R.id.textViewStatus);
+        maxBudget = findViewById(R.id.textViewMaxBudget);
+        maxBudget2 = findViewById(R.id.textViewMaxBudget2);
+        usedBudget = findViewById(R.id.textViewUsedBudget);
+        budget = findViewById(R.id.seekBarBudget);
         setPriority(MainActivity.Projects.get(index).priority-1);
         status.setChecked(MainActivity.Projects.get(index).status);
         setPriorityText(MainActivity.Projects.get(index).status);
-
-        //progressBar.setProgress(70);
-        //ObjectAnimator.ofInt(progressBar, "progress", 79).start();
+        maxBudget.setText(Integer.toString(MainActivity.Projects.get(index).budget));
+        maxBudget2.setText(Integer.toString(MainActivity.Projects.get(index).budget));
+        usedBudget.setText(Integer.toString(MainActivity.Projects.get(index).budgetUsed));
+        budget.setMax(MainActivity.Projects.get(index).budget);
+        budget.setProgress(MainActivity.Projects.get(index).budgetUsed);
         for(int i = 0;i<3;i++)
         {
                setProgressAnimate(progressBar[i],MainActivity.Projects.get(index).progress[i]);
@@ -59,8 +69,29 @@ public class ProjectDetailsActivity extends AppCompatActivity {
             MainActivity.Projects.get(index).status = isChecked;
             saveData();
         });
-    }
+        budget.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                setBudgetText(progress);
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+    public void setBudgetText(int progress)
+    {
+        usedBudget.setText(Integer.toString(progress));
+        MainActivity.Projects.get(index).budgetUsed = progress;
+        saveData();
+    }
     public void setPriorityText(Boolean isChecked)
     {
         if(isChecked)
