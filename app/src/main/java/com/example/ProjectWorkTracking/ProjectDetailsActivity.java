@@ -8,6 +8,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -20,6 +22,8 @@ public class ProjectDetailsActivity extends AppCompatActivity {
     int[] priorityColors;
     com.google.android.material.progressindicator.CircularProgressIndicator[] progressBar;
     Button priorityButton;
+    Switch status;
+    TextView statusText;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         priorityColors = new int[]{getResources().getColor(R.color.low_priority),getResources().getColor(R.color.medium_priority),getResources().getColor(R.color.high_priority)};
@@ -37,14 +41,40 @@ public class ProjectDetailsActivity extends AppCompatActivity {
         progressBar[1]= findViewById(R.id.progressBar2);
         progressBar[2]= findViewById(R.id.progressBar3);
         priorityButton = findViewById(R.id.buttonPriority);
+        status = findViewById(R.id.switchStatus);
+        statusText = findViewById(R.id.textViewStatus);
         setPriority(MainActivity.Projects.get(index).priority-1);
+        status.setChecked(MainActivity.Projects.get(index).status);
+        setPriorityText(MainActivity.Projects.get(index).status);
+
         //progressBar.setProgress(70);
         //ObjectAnimator.ofInt(progressBar, "progress", 79).start();
         for(int i = 0;i<3;i++)
         {
                setProgressAnimate(progressBar[i],MainActivity.Projects.get(index).progress[i]);
         }
+
+        status.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            setPriorityText(isChecked);
+            MainActivity.Projects.get(index).status = isChecked;
+            saveData();
+        });
     }
+
+    public void setPriorityText(Boolean isChecked)
+    {
+        if(isChecked)
+        {
+            statusText.setText("ACTIVE");
+            statusText.setTextColor(getResources().getColor(R.color.low_priority));
+        }
+        else
+        {
+            statusText.setText("INACTIVE");
+            statusText.setTextColor(getResources().getColor(R.color.high_priority));
+        }
+    }
+
     public void priorityButtonClickFunc(View view)
     {
         int priority = Integer.parseInt((String)view.getTag());
