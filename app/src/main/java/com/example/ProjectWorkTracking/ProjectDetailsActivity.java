@@ -1,5 +1,7 @@
 package com.example.ProjectWorkTracking;
 
+import static java.lang.String.valueOf;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.animation.ObjectAnimator;
@@ -16,7 +18,11 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class ProjectDetailsActivity extends AppCompatActivity {
     int index;
@@ -25,9 +31,10 @@ public class ProjectDetailsActivity extends AppCompatActivity {
     com.google.android.material.progressindicator.CircularProgressIndicator[] progressBar;
     Button priorityButton;
     Switch status;
-    TextView statusText, maxBudget, usedBudget, maxBudget2;
+    TextView statusText, maxBudget, usedBudget, maxBudget2, dueDate, daysLeft;
     SeekBar budget;
-
+    SimpleDateFormat sdf;
+    Date enddate, curDate;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         priorityColors = new int[]{getResources().getColor(R.color.low_priority),getResources().getColor(R.color.medium_priority),getResources().getColor(R.color.high_priority)};
@@ -39,7 +46,6 @@ public class ProjectDetailsActivity extends AppCompatActivity {
         TextView description = findViewById(R.id.textViewDescription);
         title.setText(MainActivity.Projects.get(index).name);
         description.setText(MainActivity.Projects.get(index).description);
-        //System.out.println(priorityButtons[0][1]);
         progressBar = new com.google.android.material.progressindicator.CircularProgressIndicator[3];
         progressBar[0]= findViewById(R.id.progressBar1);
         progressBar[1]= findViewById(R.id.progressBar2);
@@ -51,12 +57,27 @@ public class ProjectDetailsActivity extends AppCompatActivity {
         maxBudget2 = findViewById(R.id.textViewMaxBudget2);
         usedBudget = findViewById(R.id.textViewUsedBudget);
         budget = findViewById(R.id.seekBarBudget);
+        dueDate = findViewById(R.id.textViewDueDate);
+        daysLeft = findViewById(R.id.textViewDaysLeft);
+        sdf = new SimpleDateFormat("dd/MM/yyyy");
+        try {
+            enddate = sdf.parse(MainActivity.Projects.get(index).endDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        curDate = new Date();
+        long diff = TimeUnit.DAYS.convert(enddate.getTime() - curDate.getTime(), TimeUnit.MILLISECONDS);
+        if(diff<0)
+            daysLeft.setText("Overdue");
+        else
+            daysLeft.setText(String.valueOf(diff));
         setPriority(MainActivity.Projects.get(index).priority-1);
         status.setChecked(MainActivity.Projects.get(index).status);
         setPriorityText(MainActivity.Projects.get(index).status);
         maxBudget.setText(Integer.toString(MainActivity.Projects.get(index).budget));
         maxBudget2.setText(Integer.toString(MainActivity.Projects.get(index).budget));
         usedBudget.setText(Integer.toString(MainActivity.Projects.get(index).budgetUsed));
+        dueDate.setText(MainActivity.Projects.get(index).endDate);
         budget.setMax(MainActivity.Projects.get(index).budget);
         budget.setProgress(MainActivity.Projects.get(index).budgetUsed);
         for(int i = 0;i<3;i++)
@@ -85,6 +106,10 @@ public class ProjectDetailsActivity extends AppCompatActivity {
 
             }
         });
+    }
+    void initComp()
+    {
+
     }
     public void setBudgetText(int progress)
     {
