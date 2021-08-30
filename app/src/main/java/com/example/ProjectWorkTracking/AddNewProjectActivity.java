@@ -2,11 +2,13 @@ package com.example.ProjectWorkTracking;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
@@ -14,19 +16,70 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 
-public class AddNewProjectActivity extends AppCompatActivity {
+import java.util.Calendar;
 
+public class AddNewProjectActivity extends AppCompatActivity {
+    private int mYear, mMonth, mDay;
+    EditText startDate;
+    EditText endDate;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_new_project);
         Intent intent = getIntent();
+        startDate = findViewById(R.id.editTextStartDate);
+        endDate = findViewById(R.id.editTextEndDate);
+        listeners();
+    }
+    void listeners()
+    {
+        startDate.setOnClickListener(v-> {
+            final Calendar c = Calendar.getInstance();
+            mYear = c.get(Calendar.YEAR);
+            mMonth = c.get(Calendar.MONTH);
+            mDay = c.get(Calendar.DAY_OF_MONTH);
+            System.out.println("workingggg");
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    new DatePickerDialog.OnDateSetListener() {
+
+                        @Override
+                        public void onDateSet(DatePicker view, int year,
+                                              int monthOfYear, int dayOfMonth) {
+
+                            startDate.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
+
+                        }
+                    }, mYear, mMonth, mDay);
+            datePickerDialog.show();
+
+        });
+        endDate.setOnClickListener(v-> {
+            final Calendar c = Calendar.getInstance();
+            mYear = c.get(Calendar.YEAR);
+            mMonth = c.get(Calendar.MONTH);
+            mDay = c.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    new DatePickerDialog.OnDateSetListener() {
+
+                        @Override
+                        public void onDateSet(DatePicker view, int year,
+                                              int monthOfYear, int dayOfMonth) {
+
+                            endDate.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
+
+                        }
+                    }, mYear, mMonth, mDay);
+            datePickerDialog.show();
+
+        });
     }
     public void addProject(View view) {
         EditText name = findViewById(R.id.editTextPname);
         EditText description = findViewById(R.id.editTextPdescription);
-        EditText startDate = findViewById(R.id.editTextStartDate);
-        EditText endDate = findViewById(R.id.editTextEndDate);
+
+
         EditText manager = findViewById(R.id.editTextTextPmanager);
         EditText budget = findViewById(R.id.editTextBudget);
         Spinner priority  = findViewById(R.id.spinner);
@@ -50,6 +103,7 @@ public class AddNewProjectActivity extends AppCompatActivity {
             priority1=1;
         else
             priority1=0;
+
         Project project = new Project(name.getText().toString(), description.getText().toString(), startDate.getText().toString(),
                 endDate.getText().toString(), manager.getText().toString(),Integer.parseInt(budget.getText().toString()),
                 priority1, teams, status1, new int[]{0,0,0});
