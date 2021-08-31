@@ -1,6 +1,7 @@
 package com.example.ProjectWorkTracking;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -42,10 +44,8 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
                 + projects.get(holder.getAdapterPosition()).endDate);
         holder.image.setImageResource(R.drawable.imagepro);
         holder.delete.setOnClickListener(v -> {
-            projects.remove(holder.getAdapterPosition());
-            notifyItemRemoved(holder.getAdapterPosition());
-            notifyItemRangeChanged(holder.getAdapterPosition(),getItemCount());
-            saveData();
+            showDialog(projects.get(holder.getAdapterPosition()).name, holder.getAdapterPosition());
+
         });
         holder.details.setOnClickListener(v -> {
             Intent intent = new Intent(context, ProjectDetailsActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -93,6 +93,24 @@ public class ProjectsRecViewAdapter extends RecyclerView.Adapter<ProjectsRecView
         String json = gson.toJson(MainActivity.Projects);
         editor.putString("ProjectsList", json);
         editor.apply();
+    }
+    public void showDialog(String Title, int pos)
+    {
+        new MaterialAlertDialogBuilder(context)
+                .setTitle(Title)
+                .setMessage("Delete Project?")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Delete", new DialogInterface.OnClickListener(){
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        System.out.println("Working");
+                        projects.remove(pos);
+                        notifyItemRemoved(pos);
+                        notifyItemRangeChanged(pos,getItemCount());
+                        saveData();
+                    }
+                })
+        .show();
     }
 
 }
