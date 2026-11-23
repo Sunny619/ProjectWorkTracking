@@ -14,7 +14,7 @@
 
 - [Overview](#overview)
 - [Key Features](#key-features)
-- [Application Flow & Architecture](#application-flow--architecture)
+- [Architecture & Design Patterns](#architecture--design-patterns)
 - [Tech Stack & Dependencies](#tech-stack--dependencies)
 - [Directory Structure](#directory-structure)
 - [Data Storage & Persistence](#data-storage--persistence)
@@ -29,76 +29,82 @@
 
 Managing concurrent development projects requires real-time visibility into multiple variables: cross-team completion percentages, financial burn rate against allotted budget, and countdown to delivery deadlines. 
 
-**Project Work Tracking** solves this with an intuitive Material Design interface that provides:
-1. High-level dashboard views of all active and completed projects.
-2. Comprehensive project creation forms with built-in date validation and team assignments.
-3. In-depth tracking views featuring animated, multi-ring concentric circular progress indicators for Design, Development, and Testing phases.
-4. Dynamic budget tracking via interactive SeekBars and real-time deadline calculation.
+**Project Work Tracking** provides an intuitive, robust interface with:
+1. High-level dashboard views of all active and completed projects with optimized `DiffUtil` card rendering.
+2. Comprehensive project creation forms with strict validation, zero-padded `DatePickerDialog` modals, and team assignments.
+3. In-depth tracking views featuring animated, multi-ring concentric circular progress indicators for Design, Development, and Testing phases with safe boundary clamping [0–100%].
+4. Dynamic budget tracking via interactive SeekBars and real-time deadline countdowns with automated overdue detection.
+5. Centralized `ProjectRepository` persistence architecture isolating storage and serialization from UI activities.
 
 ---
 
 ## Key Features
 
 ### 1. Dashboard & Project Management (`MainActivity`)
-- **RecyclerView Cards**: Displays all saved projects in a clean card-based layout featuring project name, description, assigned manager, budget, active status, and deadline.
+- **RecyclerView Cards with DiffUtil**: Displays all saved projects in a clean card-based layout featuring project name, description, assigned manager, budget, active status, and deadline. `DiffUtil` calculations avoid unnecessary re-binds.
+- **Lifecycle-Aware Auto-Refresh**: Hooks into `onResume` to instantly reflect newly added, edited, or deleted projects when navigating back.
 - **Quick Actions**:
   - **Details**: Opens the comprehensive milestone and budget tracking dashboard for that project.
-  - **Delete**: Prompts a Material Confirmation Dialog (`MaterialAlertDialogBuilder`) to prevent accidental deletion before updating persistent storage.
+  - **Delete**: Prompts a Material Confirmation Dialog (`MaterialAlertDialogBuilder`) before delegating removal to `ProjectRepository`.
 - **Floating Action Button (FAB)**: Quick access to create a new project.
 
 ### 2. Comprehensive Project Creation (`AddNewProjectActivity`)
-- **Project Metadata**: Fields for Project Name, Multi-line Description, Project Manager, and Allocated Budget.
-- **Interactive Date Pickers**: Custom `DatePickerDialog` modals for Start Date and Due Date ensuring standard `dd/MM/yyyy` format.
-- **Cross-Functional Team Assignment**: Multi-selection checkboxes to associate departments:
-  - Tech Team
-  - Finance Team
-  - Marketing Team
+- **Input Validation**: Strict validation for non-empty project names, valid numeric positive budgets, and non-empty dates.
+- **Duplicate Prevention**: Case-insensitive check via `ProjectRepository` prevents duplicate project names.
+- **Standardized Date Pickers**: Formats and zero-pads dates (`dd/MM/yyyy`) using `DateUtils` to guarantee format consistency across the app.
+- **Cross-Functional Team Assignment**: Multi-selection checkboxes to associate departments (Tech, Finance, Marketing).
 - **Priority Selector**: Dropdown spinner to assign priority (`High`, `Medium`, `Low`).
 - **Initial Status**: Radio group to specify initial project state (Active / Inactive).
-- **Validation**: Enforces duplicate name prevention across existing projects with user-friendly Toast notifications.
+- **Seamless UX**: Automatically calls `finish()` upon successful addition to return the user directly to the refreshed dashboard.
 
 ### 3. Detailed Milestone & Budget Tracking (`ProjectDetailsActivity`)
 - **Multi-Ring Circular Progress Indicators**:
   - **Design Progress**: Yellow indicator (`#E2D810`)
   - **Development Progress**: Magenta indicator (`#D9138A`)
   - **Testing Progress**: Blue indicator (`#12A4D9`)
-  - Incremented and decremented in 10% steps using dedicated controls with smooth `ObjectAnimator` transitions.
+  - Stepped in 10% increments with strictly clamped bounds [0%–100%] and smooth `ObjectAnimator` transitions.
 - **Interactive Budget Tracker**:
   - Dynamic `SeekBar` capped at the project's allocated maximum budget.
   - Tracks and saves budget consumption in real-time as the slider moves.
-- **Automated Deadline Countdown**:
-  - Parses project end date using `SimpleDateFormat`.
-  - Calculates remaining days in real-time (`diff = endDate - curDate`).
+- **Automated Deadline Countdown (`DateUtils`)**:
+  - Calculates normalized days remaining until deadline (`diff = targetDate - today`).
   - Displays explicit **"Overdue"** alert if the deadline has passed.
 - **One-Tap Priority Toggle**:
   - Cycles dynamically through **LOW**, **MEDIUM**, and **HIGH**.
   - Color-coded button state (`#2CC990` for Low, `#FCB942` for Medium, `#FC6042` for High).
 - **Active / Inactive Status Switch**:
-  - Switch component to toggle active status with immediate color-coded text updates.
+  - Switch component to toggle active status with immediate color-coded visual indicator.
+- **Safe Index Handling**: Validates project existence before rendering to prevent out-of-bounds crashes.
 
 ---
 
-## Application Flow & Architecture
+## Architecture & Design Patterns
 
 ```
-                      +-----------------------------+
-                      |         MainActivity        |
-                      |  - Loads projects from SP   |
-                      |  - RecyclerView Card list   |
-                      +--------------+--------------+
-                                     |
-               +---------------------+---------------------+
-               |                                           |
-               v                                           v
-+-------------------------------+           +-------------------------------+
-|     AddNewProjectActivity     |           |     ProjectDetailsActivity    |
-| - Project details form        |           | - Concentric progress rings   |
-| - DatePickerDialog calendar   |           |   (Design, Dev, Testing)      |
-| - Teams & priority assignment |           | - Interactive budget SeekBar  |
-| - Duplicate validation        |           | - Due date countdown / Overdue|
-| - Saves to SharedPreferences  |           | - Priority toggle button      |
-+-------------------------------+           | - Auto-syncs to SharedPrefs   |
-                                            +-------------------------------+
+                                  +-----------------------+
+                                  |     MainActivity      |
+                                  |  - RecyclerView List  |
+                                  |  - DiffUtil Adapter   |
+                                  +-----------+-----------+
+                                              |
+                        +---------------------+---------------------+
+                        |                                           |
+                        v                                           v
+         +-----------------------------+             +-----------------------------+
+         |    AddNewProjectActivity    |             |    ProjectDetailsActivity   |
+         |  - Form & validation        |             |  - Multi-ring progress rings|
+         |  - DateUtils pickers        |             |  - Budget SeekBar & deadline|
+         +--------------+--------------+             +--------------+--------------+
+                        |                                           |
+                        +---------------------+---------------------+
+                                              |
+                                              v
+                               +-----------------------------+
+                               |      ProjectRepository      |
+                               |  - Singleton persistence    |
+                               |  - In-memory cache & CRUD   |
+                               |  - SharedPreferences + Gson |
+                               +-----------------------------+
 ```
 
 ---
@@ -113,9 +119,9 @@ Managing concurrent development projects requires real-time visibility into mult
   - **Material Components** (`com.google.android.material:material:1.4.0`): CircularProgressIndicator, MaterialCardView, MaterialButton, MaterialAlertDialog.
   - **AndroidX AppCompat** (`androidx.appcompat:appcompat:1.2.0`): Backwards-compatible UI framework.
   - **ConstraintLayout** (`androidx.constraintlayout:constraintlayout:2.0.4`): Flexible, flat view hierarchy layouts.
-  - **Gson** (`com.google.code.gson:gson:2.8.8`): High-performance JSON serialization and deserialization for local persistence.
+  - **Gson** (`com.google.code.gson:gson:2.8.8`): JSON serialization and deserialization for local persistence.
 - **Testing**:
-  - JUnit 4 (`junit:junit:4.+`)
+  - JUnit 4 (`junit:junit:4.13.2`)
   - AndroidX Test Ext (`androidx.test.ext:junit:1.1.2`)
   - Espresso Core (`androidx.test.espresso:espresso-core:3.3.0`)
 
@@ -130,10 +136,12 @@ ProjectWorkTracking/
 │   │   ├── main/
 │   │   │   ├── java/com/example/ProjectWorkTracking/
 │   │   │   │   ├── AddNewProjectActivity.java    # Project creation and validation
+│   │   │   │   ├── DateUtils.java                # Date formatting, parsing & countdown helpers
 │   │   │   │   ├── MainActivity.java             # Entry point & project card listing
-│   │   │   │   ├── Project.java                  # Data model
+│   │   │   │   ├── Project.java                  # Encapsulated data model
 │   │   │   │   ├── ProjectDetailsActivity.java   # Milestone, budget, & status tracking
-│   │   │   │   └── ProjectsRecViewAdapter.java   # RecyclerView adapter & delete handling
+│   │   │   │   ├── ProjectRepository.java        # Centralized persistence repository
+│   │   │   │   └── ProjectsRecViewAdapter.java   # DiffUtil RecyclerView adapter
 │   │   │   ├── res/
 │   │   │   │   ├── drawable/                     # Assets & project card imagery
 │   │   │   │   ├── layout/                       # UI XML layout definitions
@@ -147,6 +155,10 @@ ProjectWorkTracking/
 │   │   │   │   │   └── themes.xml
 │   │   │   │   └── AndroidManifest.xml           # Application manifest
 │   │   ├── test/                                 # Local unit tests
+│   │   │   └── java/com/example/ProjectWorkTracking/
+│   │   │       ├── DateUtilsTest.java            # Unit tests for DateUtils
+│   │   │       ├── ExampleUnitTest.java          # Sample unit test
+│   │   │       └── ProjectTest.java              # Unit tests for Project model
 │   │   └── androidTest/                          # Instrumented UI tests
 │   ├── build.gradle                              # App-level build config & dependencies
 │   └── proguard-rules.pro                        # ProGuard obfuscation rules
@@ -166,9 +178,10 @@ ProjectWorkTracking/
 
 ## Data Storage & Persistence
 
-The application uses Android's private `SharedPreferences` storage with key `"shared preferences"` to persist application state without requiring an external database:
-- The project collection (`ArrayList<Project>`) is serialized into JSON using Google **Gson** and stored under key `"ProjectsList"`.
-- Data is saved on every state change:
+The application uses `ProjectRepository`, a singleton storage layer encapsulating Android's private `SharedPreferences` with Google **Gson**:
+- Encapsulates key `"ProjectsList"` and file `"shared preferences"`.
+- Features in-memory caching for sub-millisecond retrieval.
+- Auto-syncs across state mutations:
   - Adding a new project
   - Deleting an existing project
   - Updating budget progress via SeekBar
@@ -214,8 +227,11 @@ Run connected instrumented tests on an active device/emulator:
 
 ## Roadmap & Enhancements
 
+- [x] **Repository Layer**: Centralized data access and persistence via `ProjectRepository`.
+- [x] **Safe Date Utils**: Robust parsing and deadline countdowns via `DateUtils`.
+- [x] **DiffUtil Rendering**: Seamless RecyclerView updates without UI flicker.
+- [x] **Comprehensive Unit Tests**: Full coverage for `Project` model and `DateUtils`.
 - [ ] **Room Persistence**: Migrate `SharedPreferences` + Gson to Android Jetpack Room DB with SQLite for scalable relational queries.
-- [ ] **Data Validation**: Enhance input validation for budget bounds and manager names.
 - [ ] **Search & Filtering**: Search projects by name and filter by status, priority, or department team.
 - [ ] **Material 3 / Dynamic Colors**: Update themes to latest Material You design specs.
 - [ ] **Export & Share**: Generate PDF/CSV progress summary reports to share with stakeholders.

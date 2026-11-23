@@ -6,4 +6,19 @@
         <item>Medium</item>
         <item>Low</item>
     </string-array>
+    <string name="manager_budget_format">Manager: %1$s       Budget: %2$d</string>
+    <string name="status_duedate_format">Active: %1$s       Due Date: %2$s</string>
+    <string name="delete_project_title">%1$s</string>
+    <string name="delete_project_confirm">Delete Project?</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="error_empty_name">Please enter a project name</string>
+    <string name="error_invalid_budget">Please enter a valid positive budget</string>
+    <string name="error_empty_dates">Please select start and end dates</string>
+    <string name="error_duplicate_name">This Project name already exists!</string>
+    <string name="project_created_success">Project added successfully!</string>
+    <string name="status_active">ACTIVE</string>
+    <string name="status_inactive">INACTIVE</string>
+    <string name="status_overdue">Overdue</string>
+    <string name="error_project_not_found">Project not found</string>
 </resources>

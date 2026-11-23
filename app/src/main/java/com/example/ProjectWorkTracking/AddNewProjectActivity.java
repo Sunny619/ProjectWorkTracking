@@ -3,142 +3,144 @@ package com.example.ProjectWorkTracking;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-
 import java.util.Calendar;
 
+/**
+ * Activity for creating and configuring a new Project with comprehensive validation.
+ */
 public class AddNewProjectActivity extends AppCompatActivity {
-    private int mYear, mMonth, mDay;
-    EditText startDate;
-    EditText endDate;
+
+    private EditText editTextName;
+    private EditText editTextDescription;
+    private EditText editTextManager;
+    private EditText editTextBudget;
+    private EditText editTextStartDate;
+    private EditText editTextEndDate;
+    private Spinner spinnerPriority;
+    private CheckBox checkTech;
+    private CheckBox checkFinance;
+    private CheckBox checkMarketing;
+    private RadioGroup radioGroupStatus;
+
+    private ProjectRepository repository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_new_project);
-        Intent intent = getIntent();
-        startDate = findViewById(R.id.editTextStartDate);
-        endDate = findViewById(R.id.editTextEndDate);
-        listeners();
+
+        repository = ProjectRepository.getInstance(this);
+
+        initViews();
+        setupDatePickerListeners();
     }
-    void listeners()
-    {
-        startDate.setOnClickListener(v-> {
-            final Calendar c = Calendar.getInstance();
-            mYear = c.get(Calendar.YEAR);
-            mMonth = c.get(Calendar.MONTH);
-            mDay = c.get(Calendar.DAY_OF_MONTH);
-            System.out.println("workingggg");
 
-            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
-                    new DatePickerDialog.OnDateSetListener() {
-
-                        @Override
-                        public void onDateSet(DatePicker view, int year,
-                                              int monthOfYear, int dayOfMonth) {
-
-                            startDate.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
-
-                        }
-                    }, mYear, mMonth, mDay);
-            datePickerDialog.show();
-
-        });
-        endDate.setOnClickListener(v-> {
-            final Calendar c = Calendar.getInstance();
-            mYear = c.get(Calendar.YEAR);
-            mMonth = c.get(Calendar.MONTH);
-            mDay = c.get(Calendar.DAY_OF_MONTH);
-
-            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
-                    new DatePickerDialog.OnDateSetListener() {
-
-                        @Override
-                        public void onDateSet(DatePicker view, int year,
-                                              int monthOfYear, int dayOfMonth) {
-
-                            endDate.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
-
-                        }
-                    }, mYear, mMonth, mDay);
-            datePickerDialog.show();
-
-        });
+    private void initViews() {
+        editTextName = findViewById(R.id.editTextPname);
+        editTextDescription = findViewById(R.id.editTextPdescription);
+        editTextManager = findViewById(R.id.editTextTextPmanager);
+        editTextBudget = findViewById(R.id.editTextBudget);
+        editTextStartDate = findViewById(R.id.editTextStartDate);
+        editTextEndDate = findViewById(R.id.editTextEndDate);
+        spinnerPriority = findViewById(R.id.spinner);
+        checkTech = findViewById(R.id.checkBox);
+        checkFinance = findViewById(R.id.checkBox2);
+        checkMarketing = findViewById(R.id.checkBox3);
+        radioGroupStatus = findViewById(R.id.radioGroupStatus);
     }
+
+    private void setupDatePickerListeners() {
+        editTextStartDate.setOnClickListener(v -> showDatePicker(editTextStartDate));
+        editTextEndDate.setOnClickListener(v -> showDatePicker(editTextEndDate));
+    }
+
+    private void showDatePicker(EditText targetField) {
+        final Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    String formatted = DateUtils.formatDate(selectedDay, selectedMonth, selectedYear);
+                    targetField.setText(formatted);
+                }, year, month, day);
+        datePickerDialog.show();
+    }
+
     public void addProject(View view) {
-        EditText name = findViewById(R.id.editTextPname);
-        EditText description = findViewById(R.id.editTextPdescription);
+        String name = editTextName.getText().toString().trim();
+        if (name.isEmpty()) {
+            editTextName.setError(getString(R.string.error_empty_name));
+            editTextName.requestFocus();
+            return;
+        }
 
+        String description = editTextDescription.getText().toString().trim();
+        String manager = editTextManager.getText().toString().trim();
+        String startDate = editTextStartDate.getText().toString().trim();
+        String endDate = editTextEndDate.getText().toString().trim();
 
-        EditText manager = findViewById(R.id.editTextTextPmanager);
-        EditText budget = findViewById(R.id.editTextBudget);
-        Spinner priority  = findViewById(R.id.spinner);
-        CheckBox tech = findViewById(R.id.checkBox);
-        CheckBox finance = findViewById(R.id.checkBox2);
-        CheckBox marketing = findViewById(R.id.checkBox3);
-        RadioGroup status = findViewById(R.id.radioGroupStatus);
-        Boolean[] teams = new Boolean[3];
-        teams[0] = tech.isChecked();
-        teams[1] = finance.isChecked();
-        teams[2] = marketing.isChecked();
-        Boolean status1= false;
-        if(status.getCheckedRadioButtonId() == R.id.radioButton2)
-            status1 = true;
-        int priority1;
-        if(priority.getSelectedItem().toString().equals("High"))
-            priority1=3;
-        else if(priority.getSelectedItem().toString().equals("Medium"))
-            priority1=2;
-        else if(priority.getSelectedItem().toString().equals("Low"))
-            priority1=1;
-        else
-            priority1=0;
+        if (startDate.isEmpty() || endDate.isEmpty()) {
+            Toast.makeText(this, R.string.error_empty_dates, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        Project project = new Project(name.getText().toString(), description.getText().toString(), startDate.getText().toString(),
-                endDate.getText().toString(), manager.getText().toString(),Integer.parseInt(budget.getText().toString()),
-                priority1, teams, status1, new int[]{0,0,0});
-        //System.out.println(project.toString());
-        boolean duplicate = false;
-        for(int i =0; i<MainActivity.Projects.size();i++)
-        {
-            if(MainActivity.Projects.get(i).name.equals(name.getText().toString()) )
-            {
-                duplicate =true;
-                break;
+        String budgetStr = editTextBudget.getText().toString().trim();
+        int budget;
+        try {
+            budget = Integer.parseInt(budgetStr);
+            if (budget < 0) {
+                editTextBudget.setError(getString(R.string.error_invalid_budget));
+                editTextBudget.requestFocus();
+                return;
             }
-
-        }
-        if(duplicate)
-        {
-            Toast.makeText(this, "This Project name already exists!", Toast.LENGTH_SHORT).show();
-            System.out.println("Duplicate");
-        }
-        else
-        {
-            MainActivity.Projects.add(project);
-            //System.out.println(MainActivity.Projects.toString());
-            saveData();
-            Toast.makeText(this, "Project added Successfully!", Toast.LENGTH_SHORT).show();
-            System.out.println("Created");
+        } catch (NumberFormatException e) {
+            editTextBudget.setError(getString(R.string.error_invalid_budget));
+            editTextBudget.requestFocus();
+            return;
         }
 
-    }
-    public void  saveData(){
-        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.Projects);
-        editor.putString("ProjectsList", json);
-        editor.apply();
+        if (repository.isProjectNameTaken(name)) {
+            Toast.makeText(this, R.string.error_duplicate_name, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Boolean[] teams = new Boolean[]{
+                checkTech.isChecked(),
+                checkFinance.isChecked(),
+                checkMarketing.isChecked()
+        };
+
+        boolean isActive = radioGroupStatus.getCheckedRadioButtonId() == R.id.radioButton2;
+
+        int priorityLevel;
+        String priorityStr = spinnerPriority.getSelectedItem() != null ?
+                spinnerPriority.getSelectedItem().toString() : "";
+        if ("High".equalsIgnoreCase(priorityStr)) {
+            priorityLevel = Project.PRIORITY_HIGH;
+        } else if ("Medium".equalsIgnoreCase(priorityStr)) {
+            priorityLevel = Project.PRIORITY_MEDIUM;
+        } else if ("Low".equalsIgnoreCase(priorityStr)) {
+            priorityLevel = Project.PRIORITY_LOW;
+        } else {
+            priorityLevel = Project.PRIORITY_NONE;
+        }
+
+        Project newProject = new Project(name, description, startDate, endDate, manager,
+                budget, priorityLevel, teams, isActive, new int[]{0, 0, 0});
+
+        repository.addProject(newProject);
+
+        Toast.makeText(this, R.string.project_created_success, Toast.LENGTH_SHORT).show();
+        finish();
     }
 }
