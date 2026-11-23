@@ -1,187 +1,226 @@
 package com.example.ProjectWorkTracking;
 
-import static java.lang.String.valueOf;
-
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.animation.ObjectAnimator;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.google.gson.Gson;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import java.util.Locale;
 
+/**
+ * Activity presenting detailed views of project milestones, interactive budget consumption,
+ * phase completion progress rings, and delivery timeline calculations.
+ */
 public class ProjectDetailsActivity extends AppCompatActivity {
-    int index;
-    String[] priorityStrings = new String[]{"LOW","MEDIUM","HIGH"};
-    int[] priorityColors;
-    com.google.android.material.progressindicator.CircularProgressIndicator[] progressBar;
-    Button priorityButton;
-    Switch status;
-    TextView statusText, maxBudget, usedBudget, maxBudget2, dueDate, daysLeft, title, description;
-    SeekBar budget;
-    SimpleDateFormat sdf;
-    Date endDate, curDate;
+
+    private int index;
+    private Project project;
+    private ProjectRepository repository;
+
+    private static final String[] PRIORITY_STRINGS = new String[]{"LOW", "MEDIUM", "HIGH"};
+    private int[] priorityColors;
+
+    private CircularProgressIndicator[] progressBar;
+    private Button priorityButton;
+    private Switch statusSwitch;
+    private TextView statusText;
+    private TextView maxBudget;
+    private TextView usedBudget;
+    private TextView maxBudget2;
+    private TextView dueDate;
+    private TextView daysLeft;
+    private TextView title;
+    private TextView description;
+    private SeekBar budgetSeekBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        priorityColors = new int[]{getResources().getColor(R.color.low_priority),getResources().getColor(R.color.medium_priority),getResources().getColor(R.color.high_priority)};
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_project_details);
+
+        repository = ProjectRepository.getInstance(this);
+
+        priorityColors = new int[]{
+                ContextCompat.getColor(this, R.color.low_priority),
+                ContextCompat.getColor(this, R.color.medium_priority),
+                ContextCompat.getColor(this, R.color.high_priority)
+        };
+
         Intent intent = getIntent();
-        index = intent.getIntExtra("index", 0);
+        index = intent.getIntExtra("index", -1);
+        project = repository.getProjectAt(index);
+
+        if (project == null) {
+            Toast.makeText(this, R.string.error_project_not_found, Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         initComponents();
-        setComponents();
-        listeners();
+        populateData();
+        setupListeners();
     }
-    void initComponents()
-    {
+
+    private void initComponents() {
         title = findViewById(R.id.textViewTitle);
         description = findViewById(R.id.textViewDescription);
-        progressBar = new com.google.android.material.progressindicator.CircularProgressIndicator[3];
-        progressBar[0]= findViewById(R.id.progressBar1);
-        progressBar[1]= findViewById(R.id.progressBar2);
-        progressBar[2]= findViewById(R.id.progressBar3);
+
+        progressBar = new CircularProgressIndicator[Project.NUM_PHASES];
+        progressBar[0] = findViewById(R.id.progressBar1);
+        progressBar[1] = findViewById(R.id.progressBar2);
+        progressBar[2] = findViewById(R.id.progressBar3);
+
         priorityButton = findViewById(R.id.buttonPriority);
-        status = findViewById(R.id.switchStatus);
+        statusSwitch = findViewById(R.id.switchStatus);
         statusText = findViewById(R.id.textViewStatus);
         maxBudget = findViewById(R.id.textViewMaxBudget);
         maxBudget2 = findViewById(R.id.textViewMaxBudget2);
         usedBudget = findViewById(R.id.textViewUsedBudget);
-        budget = findViewById(R.id.seekBarBudget);
+        budgetSeekBar = findViewById(R.id.seekBarBudget);
         dueDate = findViewById(R.id.textViewDueDate);
         daysLeft = findViewById(R.id.textViewDaysLeft);
     }
-    void setComponents()
-    {
-        title.setText(MainActivity.Projects.get(index).name);
-        description.setText(MainActivity.Projects.get(index).description);
-        maxBudget.setText(Integer.toString(MainActivity.Projects.get(index).budget));
-        maxBudget2.setText(Integer.toString(MainActivity.Projects.get(index).budget));
-        usedBudget.setText(Integer.toString(MainActivity.Projects.get(index).budgetUsed));
-        dueDate.setText(MainActivity.Projects.get(index).endDate);
-        setPriority(MainActivity.Projects.get(index).priority-1);
-        status.setChecked(MainActivity.Projects.get(index).status);
-        setPriorityText(MainActivity.Projects.get(index).status);
-        budget.setMax(MainActivity.Projects.get(index).budget);
-        budget.setProgress(MainActivity.Projects.get(index).budgetUsed);
-        for(int i = 0;i<3;i++)
-        {
-            setProgressAnimate(progressBar[i],MainActivity.Projects.get(index).progress[i]);
+
+    private void populateData() {
+        title.setText(project.getName());
+        description.setText(project.getDescription());
+
+        String maxBudgetStr = String.valueOf(project.getBudget());
+        maxBudget.setText(maxBudgetStr);
+        maxBudget2.setText(maxBudgetStr);
+        usedBudget.setText(String.valueOf(project.getBudgetUsed()));
+
+        dueDate.setText(project.getEndDate());
+
+        int priorityIdx = Math.max(0, Math.min(2, project.getPriority() - 1));
+        setPriorityUI(priorityIdx);
+
+        statusSwitch.setChecked(project.isStatusActive());
+        updateStatusText(project.isStatusActive());
+
+        budgetSeekBar.setMax(project.getBudget());
+        budgetSeekBar.setProgress(Math.min(project.getBudgetUsed(), project.getBudget()));
+
+        for (int i = 0; i < Project.NUM_PHASES; i++) {
+            if (progressBar[i] != null) {
+                setProgressAnimate(progressBar[i], project.getPhaseProgress(i));
+            }
         }
-        setDueDate();
+
+        updateDueDateDisplay();
     }
-    void setDueDate()
-    {
-        sdf = new SimpleDateFormat("dd/MM/yyyy");
-        try {
-            endDate = sdf.parse(MainActivity.Projects.get(index).endDate);
-        } catch (ParseException e) {
-            e.printStackTrace();
+
+    private void updateDueDateDisplay() {
+        Long days = DateUtils.calculateDaysRemaining(project.getEndDate());
+        if (days == null) {
+            daysLeft.setText(project.getEndDate());
+        } else if (days < 0) {
+            daysLeft.setText(getString(R.string.status_overdue));
+            daysLeft.setTextColor(ContextCompat.getColor(this, R.color.high_priority));
+        } else {
+            daysLeft.setText(String.format(Locale.getDefault(), "%d days", days));
+            daysLeft.setTextColor(ContextCompat.getColor(this, R.color.low_priority));
         }
-        curDate = new Date();
-        long diff = TimeUnit.DAYS.convert(endDate.getTime() - curDate.getTime(), TimeUnit.MILLISECONDS);
-        if(diff<0)
-            daysLeft.setText("Overdue");
-        else
-            daysLeft.setText(String.valueOf(diff));
     }
-    void listeners()
-    {
-        status.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            setPriorityText(isChecked);
-            MainActivity.Projects.get(index).status = isChecked;
-            saveData();
+
+    private void setupListeners() {
+        statusSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            updateStatusText(isChecked);
+            project.setStatus(isChecked);
+            repository.save();
         });
-        budget.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+        budgetSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                setBudgetText(progress);
+                usedBudget.setText(String.valueOf(progress));
+                project.setBudgetUsed(progress);
+                repository.save();
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
     }
-    public void setBudgetText(int progress)
-    {
-        usedBudget.setText(Integer.toString(progress));
-        MainActivity.Projects.get(index).budgetUsed = progress;
-        saveData();
-    }
-    public void setPriorityText(Boolean isChecked)
-    {
-        if(isChecked)
-        {
-            statusText.setText("ACTIVE");
-            statusText.setTextColor(getResources().getColor(R.color.low_priority));
-        }
-        else
-        {
-            statusText.setText("INACTIVE");
-            statusText.setTextColor(getResources().getColor(R.color.high_priority));
+
+    private void updateStatusText(boolean isActive) {
+        if (isActive) {
+            statusText.setText(getString(R.string.status_active));
+            statusText.setTextColor(ContextCompat.getColor(this, R.color.low_priority));
+        } else {
+            statusText.setText(getString(R.string.status_inactive));
+            statusText.setTextColor(ContextCompat.getColor(this, R.color.high_priority));
         }
     }
 
-    public void priorityButtonClickFunc(View view)
-    {
-        int priority = Integer.parseInt((String)view.getTag());
-        if(priority == 2)
-            priority = 0;
-        else
-            priority++;
-        setPriority(priority);
-        MainActivity.Projects.get(index).priority = priority+1;
-        saveData();
+    public void priorityButtonClickFunc(View view) {
+        int currentPriority = 0;
+        if (view.getTag() != null) {
+            try {
+                currentPriority = Integer.parseInt((String) view.getTag());
+            } catch (NumberFormatException ignored) {}
+        }
+
+        int nextPriority = (currentPriority + 1) % PRIORITY_STRINGS.length;
+        setPriorityUI(nextPriority);
+        project.setPriority(nextPriority + 1);
+        repository.save();
     }
-    public void setPriority(int priority)
-    {
-        priorityButton.setBackgroundColor(priorityColors[priority]);
-        priorityButton.setText(priorityStrings[priority]);
-        priorityButton.setTag(Integer.toString(priority));
+
+    private void setPriorityUI(int priorityIndex) {
+        if (priorityIndex >= 0 && priorityIndex < PRIORITY_STRINGS.length) {
+            priorityButton.setBackgroundColor(priorityColors[priorityIndex]);
+            priorityButton.setText(PRIORITY_STRINGS[priorityIndex]);
+            priorityButton.setTag(String.valueOf(priorityIndex));
+        }
     }
-    public void incrementProgress(View v)
-    {
-        int pos = Integer.parseInt((String)v.getTag())-1;
-        MainActivity.Projects.get(index).progress[pos] += 10;
-        setProgressAnimate(progressBar[pos], MainActivity.Projects.get(index).progress[pos]);
-        saveData();
+
+    public void incrementProgress(View v) {
+        int pos = getPhaseIndexFromView(v);
+        if (pos >= 0 && pos < Project.NUM_PHASES) {
+            project.incrementPhaseProgress(pos);
+            setProgressAnimate(progressBar[pos], project.getPhaseProgress(pos));
+            repository.save();
+        }
     }
-    public void decrementProgress(View v)
-    {
-        int pos = Integer.parseInt((String)v.getTag())-1;
-        MainActivity.Projects.get(index).progress[pos] -= 10;
-        setProgressAnimate(progressBar[pos], MainActivity.Projects.get(index).progress[pos]);
-        saveData();
+
+    public void decrementProgress(View v) {
+        int pos = getPhaseIndexFromView(v);
+        if (pos >= 0 && pos < Project.NUM_PHASES) {
+            project.decrementPhaseProgress(pos);
+            setProgressAnimate(progressBar[pos], project.getPhaseProgress(pos));
+            repository.save();
+        }
     }
-    private void setProgressAnimate(com.google.android.material.progressindicator.CircularProgressIndicator pb, int progressTo)
-    {
-        ObjectAnimator animation = ObjectAnimator.ofInt(pb, "progress", pb.getProgress(), progressTo * 100);
-        animation.setDuration(500);
+
+    private int getPhaseIndexFromView(View v) {
+        if (v != null && v.getTag() != null) {
+            try {
+                return Integer.parseInt((String) v.getTag()) - 1;
+            } catch (NumberFormatException ignored) {}
+        }
+        return -1;
+    }
+
+    private void setProgressAnimate(CircularProgressIndicator pb, int progressTo) {
+        if (pb == null) return;
+        // CircularProgressIndicator scale max is 10000 in layout XML (progressTo * 100 maps 0-100% to 0-10000)
+        int target = Math.max(0, Math.min(10000, progressTo * 100));
+        ObjectAnimator animation = ObjectAnimator.ofInt(pb, "progress", pb.getProgress(), target);
+        animation.setDuration(400);
         animation.start();
-    }
-    public void  saveData(){
-        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(MainActivity.Projects);
-        editor.putString("ProjectsList", json);
-        editor.apply();
     }
 }

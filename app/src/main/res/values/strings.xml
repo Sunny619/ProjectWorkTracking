@@ -17,4 +17,8 @@
     <string name="error_empty_dates">Please select start and end dates</string>
     <string name="error_duplicate_name">This Project name already exists!</string>
     <string name="project_created_success">Project added successfully!</string>
+    <string name="status_active">ACTIVE</string>
+    <string name="status_inactive">INACTIVE</string>
+    <string name="status_overdue">Overdue</string>
+    <string name="error_project_not_found">Project not found</string>
 </resources>
