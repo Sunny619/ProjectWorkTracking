@@ -12,4 +12,9 @@
     <string name="delete_project_confirm">Delete Project?</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
+    <string name="error_empty_name">Please enter a project name</string>
+    <string name="error_invalid_budget">Please enter a valid positive budget</string>
+    <string name="error_empty_dates">Please select start and end dates</string>
+    <string name="error_duplicate_name">This Project name already exists!</string>
+    <string name="project_created_success">Project added successfully!</string>
 </resources>
