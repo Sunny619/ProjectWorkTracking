@@ -6,4 +6,10 @@
         <item>Medium</item>
         <item>Low</item>
     </string-array>
+    <string name="manager_budget_format">Manager: %1$s       Budget: %2$d</string>
+    <string name="status_duedate_format">Active: %1$s       Due Date: %2$s</string>
+    <string name="delete_project_title">%1$s</string>
+    <string name="delete_project_confirm">Delete Project?</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
 </resources>
